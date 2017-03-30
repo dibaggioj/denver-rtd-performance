@@ -1,0 +1,285 @@
+﻿using System;
+using System.Net;
+using ProtoBuf;
+using transit_realtime;
+
+/**
+ * Denver RTD Bus Allocation Performance Reporter
+ *
+ * IWKS 5120 Lab 6
+ * 
+ * Modified from JKB test-transit
+ * 
+ * April 6, 2017
+ *
+ * Nanu Ahluwalia
+ * John DiBaggio
+ * Kyle Etsler
+ */
+
+/* Denver RTD Data Formats
+
+Sample of the Trip Updates Feed
+-------------------------------
+header {
+    gtfs_realtime_version: "1.0"
+    incrementality: FULL_DATASET
+    timestamp: 1449176392
+}
+entity {
+    id: "1449176392_109470943"
+    trip_update {
+        trip {
+            trip_id: "109470943"
+            schedule_relationship: SCHEDULED
+            route_id: "0"
+            direction_id: 0
+        }
+        stop_time_update {
+            stop_sequence: 6
+            arrival {
+                time: 1449176381
+            }
+            departure {
+               time: 1449176381
+            }
+            stop_id: "25676"
+            schedule_relationship: SCHEDULED
+        }
+        stop_time_update {
+            stop_sequence: 7
+            arrival {
+                time: 1449176479
+            }
+            departure {
+                time: 1449176479
+            }
+            stop_id: "22454"
+            schedule_relationship: SCHEDULED
+        }
+        stop_time_update {
+            stop_sequence: 8
+            arrival {
+                time: 1449176585
+            }
+            departure {
+                time: 1449176585
+            }
+            stop_id: "20378"
+            schedule_relationship: SCHEDULED
+        }
+        vehicle {
+            id: "6010"
+            label: "6010"
+        }
+        timestamp: 1449042054
+    }
+}
+
+Sample of the Vehicle Positions Feed
+------------------------------------
+header {
+    gtfs_realtime_version: "1.0"
+    incrementality: FULL_DATASET
+    timestamp: 1449042263
+}
+entity {
+    id: "1449042263_1505"
+    vehicle {
+        trip {
+            trip_id: "109486700"
+            schedule_relationship: SCHEDULED
+            route_id: "AB"
+            direction_id: 1
+        }
+        position {
+            latitude: 39.8419
+            longitude: -104.676231
+            bearing: 161
+        }
+        current_status: IN_TRANSIT_TO
+        timestamp: 1449042245
+        stop_id: "22903"
+        vehicle {
+            id: "1505"
+            label: "1505"
+        }
+    }
+}
+*/
+
+namespace rtd
+{
+    class Program
+    {
+		static void GetAndProcessTripUpdate()
+		{
+			Uri myUri = new Uri("http://www.rtd-denver.com/google_sync/TripUpdate.pb");
+			WebRequest myWebRequest = HttpWebRequest.Create(myUri);
+
+			HttpWebRequest myHttpWebRequest = (HttpWebRequest)myWebRequest;
+
+			NetworkCredential myNetworkCredential = new NetworkCredential("TODO", "TODO");
+
+			CredentialCache myCredentialCache = new CredentialCache();
+			myCredentialCache.Add(myUri, "Basic", myNetworkCredential);
+
+			myHttpWebRequest.PreAuthenticate = true;
+			myHttpWebRequest.Credentials = myCredentialCache;
+
+			FeedMessage feed = Serializer.Deserialize<FeedMessage>(myWebRequest.GetResponse().GetResponseStream());
+
+			Stop stop_inst = new Stop();	// initialize static stop dictionary from RTD data file
+			Trip trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
+
+			foreach (FeedEntity entity in feed.entity)
+			{
+				TripUpdate trip_update;
+
+				trip_update = entity.trip_update;
+				if (trip_update != null)
+				{
+					string trip_id = null;
+					if (trip_update.trip != null)
+					{
+						trip_id = trip_update.trip.trip_id;
+					}
+
+					if (trip_id == null)
+					{
+						break;
+					}
+
+					if (trip_update.stop_time_update != null && trip_update.stop_time_update.Count > 0)
+					{
+						Trip.trip_t static_trip;
+						Trip.trip_stops_t static_next_trip_stop;
+
+						if (trip_id != null && Trip.trips.ContainsKey(trip_id))
+						{
+							static_trip = Trip.trips[trip_id];
+							if (trip_update.stop_time_update.Count > 0)
+							{
+								TripUpdate.StopTimeUpdate current_next_stop_time_update = trip_update.stop_time_update[0];
+								uint current_first_stop_seq = current_next_stop_time_update.stop_sequence;
+								TripUpdate.StopTimeEvent current_first_stop_arrival = current_next_stop_time_update.arrival;
+								long current_next_stop_arrival_time = current_first_stop_arrival.time;
+
+								if (static_trip.tripStops.Count > current_first_stop_seq)
+								{
+									static_next_trip_stop = static_trip.tripStops[Convert.ToInt32(current_first_stop_seq)];
+
+								}
+
+								// TODO: figure out how this is possibly unassigned
+								// Use of possibly unassigned field 'arrive_time'
+								//long static_next_arrival_time = Convert.ToInt64(static_next_trip_stop.arrive_time);
+
+								//long delta_time = static_next_arrival_time - current_next_stop_arrival_time;
+
+								//Console.WriteLine("delta_time: " + delta_time);
+
+								/**
+								 * TODO:
+								 * For each route, store each trip and each trip's minutely delta_time values
+								 * For each route, report average hourly on-time-ness value and trip count (i.e., number
+								 * of buses running on that route during that hour)
+								 */
+							}
+						}
+					}
+				}
+			}
+
+			Console.WriteLine("Press any key to continue");
+			Console.ReadLine();
+		}
+
+		static void GetAndProcessVehiclePosition()
+		{
+            Uri myUri = new Uri("http://www.rtd-denver.com/google_sync/VehiclePosition.pb");
+			WebRequest myWebRequest = HttpWebRequest.Create(myUri);
+
+			HttpWebRequest myHttpWebRequest = (HttpWebRequest)myWebRequest;
+
+			NetworkCredential myNetworkCredential = new NetworkCredential("TODO", "TODO");
+
+			CredentialCache myCredentialCache = new CredentialCache();
+			myCredentialCache.Add(myUri, "Basic", myNetworkCredential);
+
+			myHttpWebRequest.PreAuthenticate = true;
+			myHttpWebRequest.Credentials = myCredentialCache;
+
+			FeedMessage feed = Serializer.Deserialize<FeedMessage>(myWebRequest.GetResponse().GetResponseStream());
+
+			Stop stop_inst = new Stop();    // initialize static stop dictionary from RTD data file
+			Trip trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
+
+			foreach (FeedEntity entity in feed.entity)
+			{
+				if (entity.vehicle != null)
+				{
+					if (entity.vehicle.trip != null)
+					{
+						if (entity.vehicle.trip.route_id != null)
+						{
+							Console.WriteLine("Route ID = " + entity.vehicle.trip.route_id);
+							Console.WriteLine("Vehicle ID = " + entity.vehicle.vehicle.id);
+							Console.WriteLine("Current Position Information:");
+							Console.WriteLine("Current Latitude = " + entity.vehicle.position.latitude);
+							Console.WriteLine("Current Longitude = " + entity.vehicle.position.longitude);
+							Console.WriteLine("Current Bearing = " + entity.vehicle.position.bearing);
+							Console.WriteLine("Current Status = " + entity.vehicle.current_status + " StopID: " + entity.vehicle.stop_id);
+							if (Stop.stops.ContainsKey(entity.vehicle.stop_id))
+							{
+								Console.WriteLine("The name of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_name + "\"");
+								Console.WriteLine("The Latitude of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_lat + "\"");
+								Console.WriteLine("The Longitude of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_long + "\"");
+								string wheelChairOK = "IS NOT";
+								if (Stop.stops[entity.vehicle.stop_id].wheelchair_access)
+								{
+									wheelChairOK = "IS";
+								}
+								Console.WriteLine("This stop is " + wheelChairOK + " wheelchair accessible");
+							}
+
+							Console.WriteLine("Trip ID = " + entity.vehicle.trip.trip_id);
+							if (Trip.trips.ContainsKey(entity.vehicle.trip.trip_id))
+							{
+								if (entity.vehicle.current_status.ToString() == "IN_TRANSIT_TO")
+								{
+									if (Stop.stops.ContainsKey(entity.vehicle.stop_id))
+									{
+										Console.WriteLine("Vehicle in transit to: " + Stop.stops[entity.vehicle.stop_id].stop_name);
+										Trip.trip_t trip = Trip.trips[entity.vehicle.trip.trip_id];
+										foreach (Trip.trip_stops_t stop in trip.tripStops)
+										{
+											if (stop.stop_id == entity.vehicle.stop_id)
+											{
+												Console.WriteLine(".. and is scheduled to arrive there at " + stop.arrive_time);
+											}
+										}
+									}
+								}
+								Console.WriteLine();
+							}
+						}
+					}
+				}
+			}
+
+			Console.WriteLine("Press any key to continue");
+			Console.ReadLine();
+		}
+
+		static void Main(string[] args)
+		{
+			GetAndProcessVehiclePosition();
+			//GetAndProcessTripUpdate();
+		}   
+    }
+}
+
+
+
+
