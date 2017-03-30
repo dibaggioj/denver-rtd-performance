@@ -131,6 +131,7 @@ namespace rtd
 				client_id = row[0];
 				client_secret = row[1];
 			}
+			file.Close();
 		}
 
 		static void GetAndProcessTripUpdate()
