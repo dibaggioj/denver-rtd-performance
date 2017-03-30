@@ -13,10 +13,8 @@
 *.userprefs
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
+[Dd]ebug/rtd_service.txt
+[Rr]elease/rtd_service.txt
 x64/
 x86/
 bld/
@@ -38,8 +36,8 @@ bld/
 TestResult.xml
 
 # Build Results of an ATL Project
-[Dd]ebugPS/
-[Rr]eleasePS/
+[Dd]ebugPS/rtd_service
+[Rr]eleasePS/rtd_service
 dlldata.c
 
 # .NET Core

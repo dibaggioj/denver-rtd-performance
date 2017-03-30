@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using ProtoBuf;
 using transit_realtime;
@@ -112,6 +113,26 @@ namespace rtd
 {
     class Program
     {
+
+		// file with comma-separated client id and secret on a single line: {client id},{client secret}
+		const string rtd_service_filename = "rtd_service.txt";
+
+		static string client_id = "";
+		static string client_secret = "";
+
+		static void InitRTDServiceCredentials()
+		{
+			StreamReader file = new StreamReader(rtd_service_filename);
+			string line;
+			string[] row = new string[2];
+			while ((line = file.ReadLine()) != null)
+			{
+				row = line.Split(',');
+				client_id = row[0];
+				client_secret = row[1];
+			}
+		}
+
 		static void GetAndProcessTripUpdate()
 		{
 			Uri myUri = new Uri("http://www.rtd-denver.com/google_sync/TripUpdate.pb");
@@ -119,7 +140,7 @@ namespace rtd
 
 			HttpWebRequest myHttpWebRequest = (HttpWebRequest)myWebRequest;
 
-			NetworkCredential myNetworkCredential = new NetworkCredential("TODO", "TODO");
+			NetworkCredential myNetworkCredential = new NetworkCredential(client_id, client_secret);
 
 			CredentialCache myCredentialCache = new CredentialCache();
 			myCredentialCache.Add(myUri, "Basic", myNetworkCredential);
@@ -202,7 +223,7 @@ namespace rtd
 
 			HttpWebRequest myHttpWebRequest = (HttpWebRequest)myWebRequest;
 
-			NetworkCredential myNetworkCredential = new NetworkCredential("TODO", "TODO");
+			NetworkCredential myNetworkCredential = new NetworkCredential(client_id, client_secret);
 
 			CredentialCache myCredentialCache = new CredentialCache();
 			myCredentialCache.Add(myUri, "Basic", myNetworkCredential);
@@ -274,6 +295,8 @@ namespace rtd
 
 		static void Main(string[] args)
 		{
+			InitRTDServiceCredentials();
+
 			GetAndProcessVehiclePosition();
 			//GetAndProcessTripUpdate();
 		}   
