@@ -183,30 +183,36 @@ namespace rtd
 							if (trip_update.stop_time_update.Count > 0)
 							{
 								TripUpdate.StopTimeUpdate current_next_stop_time_update = trip_update.stop_time_update[0];
-								uint current_first_stop_seq = current_next_stop_time_update.stop_sequence;
-								TripUpdate.StopTimeEvent current_first_stop_arrival = current_next_stop_time_update.arrival;
-								long current_next_stop_arrival_time = current_first_stop_arrival.time;
-
-								if (static_trip.tripStops.Count > current_first_stop_seq)
+								if (current_next_stop_time_update != null)
 								{
-									static_next_trip_stop = static_trip.tripStops[Convert.ToInt32(current_first_stop_seq)];
+									uint current_first_stop_seq = current_next_stop_time_update.stop_sequence;
+									TripUpdate.StopTimeEvent current_first_stop_arrival = current_next_stop_time_update.arrival;
+									if (current_first_stop_arrival != null)
+									{
+										long current_next_stop_arrival_time = current_first_stop_arrival.time;
 
+										int stop_seq = Convert.ToInt32(current_first_stop_seq);
+										if (stop_seq >= 0 && static_trip.tripStops.Count > stop_seq)
+										{
+											static_next_trip_stop = static_trip.tripStops[stop_seq];
+											if (static_next_trip_stop.arrive_time != null && !static_next_trip_stop.arrive_time.Equals(""))
+											{
+												/**
+												 * TODO:
+												 * So the arrive time in the file (stop_times.txt) is a different format than what's 
+												 * in the RTD service. RTD service is Unix and stop_times.txt seems to be hh:mm:ss, but
+												 * the hours go up 26 apparently. Maybe hours 24 needs to become 00, 25 needs to be 01, and 
+												 * 26 needs to become 02, and then we can get all of the times in one format
+												 */
+												long static_next_arrival_time = Convert.ToInt64(static_next_trip_stop.arrive_time);
+
+												long delta_time = static_next_arrival_time - current_next_stop_arrival_time;
+
+												Console.WriteLine("delta_time: " + delta_time);
+											}
+										}
+									}
 								}
-
-								// TODO: figure out how this is possibly unassigned
-								// Use of possibly unassigned field 'arrive_time'
-								//long static_next_arrival_time = Convert.ToInt64(static_next_trip_stop.arrive_time);
-
-								//long delta_time = static_next_arrival_time - current_next_stop_arrival_time;
-
-								//Console.WriteLine("delta_time: " + delta_time);
-
-								/**
-								 * TODO:
-								 * For each route, store each trip and each trip's minutely delta_time values
-								 * For each route, report average hourly on-time-ness value and trip count (i.e., number
-								 * of buses running on that route during that hour)
-								 */
 							}
 						}
 					}
@@ -215,6 +221,13 @@ namespace rtd
 
 			Console.WriteLine("Press any key to continue");
 			Console.ReadLine();
+
+			/**
+			 * TODO:
+			 * For each route, store each trip and each trip's minutely delta_time values
+			 * For each route, report average hourly on-time-ness value and trip count (i.e., number
+			 * of buses running on that route during that hour)
+			 */
 		}
 
 		static void GetAndProcessVehiclePosition()
@@ -298,8 +311,8 @@ namespace rtd
 		{
 			InitRTDServiceCredentials();
 
-			GetAndProcessVehiclePosition();
-			//GetAndProcessTripUpdate();
+			//GetAndProcessVehiclePosition();
+			GetAndProcessTripUpdate();
 		}   
     }
 }
