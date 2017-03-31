@@ -204,11 +204,13 @@ namespace rtd
 												 * the hours go up 26 apparently. Maybe hours 24 needs to become 00, 25 needs to be 01, and 
 												 * 26 needs to become 02, and then we can get all of the times in one format
 												 */
-												long static_next_arrival_time = Convert.ToInt64(static_next_trip_stop.arrive_time);
+												//long static_next_arrival_time = Convert.ToInt64(static_next_trip_stop.arrive_time);
 
-												long delta_time = static_next_arrival_time - current_next_stop_arrival_time;
+												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrive_time);
 
-												Console.WriteLine("delta_time: " + delta_time);
+												//long delta_time = static_next_arrival_time - current_next_stop_arrival_time;
+
+												//Console.WriteLine("delta_time: " + delta_time);
 											}
 										}
 									}
