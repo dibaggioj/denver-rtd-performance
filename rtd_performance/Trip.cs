@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -10,8 +11,8 @@ namespace rtd
         {
             public string stop_seq;
             public string stop_id;
-            public string arrive_time;
-            public string dept_time;
+            public long arrive_time;
+            public long dept_time;
         }
 
         public struct trip_t
@@ -36,11 +37,21 @@ namespace rtd
             initializeTrips();
         }
 
-		static string normalizeTimeTo24Hr(string time)
+		static string normalizeTimeTo24HrAnd(string time)
 		{
 			time = Regex.Replace(time, @"(24)(:\d{2}:\d{2})", "00$2");
 			time = Regex.Replace(time, @"(25)(:\d{2}:\d{2})", "01$2");
 			time = Regex.Replace(time, @"(26)(:\d{2}:\d{2})", "02$2");
+			return time;
+		}
+
+		static long convertTimeToUnix(string timeStr)
+		{
+			long time = 0;
+			timeStr = normalizeTimeTo24HrAnd(timeStr);
+
+			// TODO: parse hh:mm:ss and convert to unix
+
 			return time;
 		}
 
@@ -75,8 +86,8 @@ namespace rtd
                     {
                         stop_id = row[TRIP_STOP_STOP_ID],
                         stop_seq = row[TRIP_STOP_STOP_SEQ],
-						arrive_time = normalizeTimeTo24Hr(row[TRIP_STOP_ARRIVE_TIME]),
-						dept_time = normalizeTimeTo24Hr(row[TRIP_STOP_DEPT_TIME])
+						arrive_time = convertTimeToUnix(row[TRIP_STOP_ARRIVE_TIME]),
+						dept_time = convertTimeToUnix(row[TRIP_STOP_DEPT_TIME])
                     });
                     thisTrip.tripStops = stops;
                     trips.Add(tripID, thisTrip); // add this trip to the trips dictionary
@@ -87,8 +98,8 @@ namespace rtd
                     {
                         stop_id = row[TRIP_STOP_STOP_ID],
                         stop_seq = row[TRIP_STOP_STOP_SEQ],
-                        arrive_time = normalizeTimeTo24Hr(row[TRIP_STOP_ARRIVE_TIME]),
-						dept_time = normalizeTimeTo24Hr(row[TRIP_STOP_DEPT_TIME])
+                        arrive_time = convertTimeToUnix(row[TRIP_STOP_ARRIVE_TIME]),
+						dept_time = convertTimeToUnix(row[TRIP_STOP_DEPT_TIME])
                     });
 
                 }
