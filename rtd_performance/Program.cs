@@ -194,7 +194,7 @@ namespace rtd
 										int stop_seq = Convert.ToInt32(current_first_stop_seq);
 										if (stop_seq >= 1 && static_trip.tripStops.Count >= stop_seq)
 										{
-											static_next_trip_stop = static_trip.tripStops[stop_seq - 1];
+											static_next_trip_stop = static_trip.tripStops[stop_seq - 1];	// sequence numbers are 1-indexed
 											if (static_next_trip_stop.arrive_time != null && !static_next_trip_stop.arrive_time.Equals(""))
 											{
 												/**
