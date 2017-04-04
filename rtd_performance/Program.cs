@@ -194,23 +194,12 @@ namespace rtd
 										int stop_seq = Convert.ToInt32(current_first_stop_seq);
 										if (stop_seq >= 1 && static_trip.tripStops.Count >= stop_seq)
 										{
-											static_next_trip_stop = static_trip.tripStops[stop_seq - 1];	// sequence numbers are 1-indexed
-											if (static_next_trip_stop.arrive_time > 0)
+											static_next_trip_stop = static_trip.tripStops[stop_seq - 1];    // sequence numbers are 1-indexed
+											if (static_next_trip_stop.arrival.time > 0)
 											{
-												/**
-												 * TODO:
-												 * So the arrive time in the file (stop_times.txt) is a different format than what's 
-												 * in the RTD service. RTD service is Unix and stop_times.txt seems to be hh:mm:ss, but
-												 * the hours go up 26 apparently. Maybe hours 24 needs to become 00, 25 needs to be 01, and 
-												 * 26 needs to become 02, and then we can get all of the times in one format
-												 */
-												//long static_next_arrival_time = Convert.ToInt64(static_next_trip_stop.arrive_time);
-
-												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrive_time);
-
-												//long delta_time = static_next_arrival_time - current_next_stop_arrival_time;
-
-												//Console.WriteLine("delta_time: " + delta_time);
+												long delta_time = static_next_trip_stop.arrival.time - current_next_stop_arrival_time;
+												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrival.time);
+												Console.WriteLine("difference: " + delta_time);
 											}
 										}
 									}
@@ -293,7 +282,7 @@ namespace rtd
 										{
 											if (stop.stop_id == entity.vehicle.stop_id)
 											{
-												Console.WriteLine(".. and is scheduled to arrive there at " + stop.arrive_time);
+												Console.WriteLine(".. and is scheduled to arrive there at " + stop.arrival.time);
 											}
 										}
 									}

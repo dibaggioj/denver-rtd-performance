@@ -2,17 +2,74 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace rtd
 {
+	class TripStopTime
+	{
+		public long time = 0;			// unix time
+		public bool normalized = true;	// true if hh was in 00-23 originally, false if hh was in 24-28 originally
+
+		public TripStopTime(string timeStr)
+		{
+			timeStr = normalizeTimeTo24Hr(timeStr);
+			convertTimeToUnix(timeStr);
+		}
+
+		private void convertTimeToUnix(string timeStr)
+		{
+			try
+			{
+				if (normalized)
+				{
+					timeStr = DateTime.Now.ToString("yyyy/MM/dd") + " " + timeStr;
+				}
+				else
+				{
+					timeStr = DateTime.Now.AddDays(1).ToString("yyyy/MM/dd") + " " + timeStr;	// adjust for hh 24-28
+				}
+
+				DateTime dateTimeFinal = DateTime.ParseExact(timeStr, "yyyy/MM/dd HH:mm:ss", null);
+				DateTime dateTimeInitial = new DateTime(1969, 12, 31, 18, 0, 0, dateTimeFinal.Kind);    // TODO: add daylight savings time support
+				time = (long) (dateTimeFinal.Subtract(dateTimeInitial)).TotalSeconds;
+			}
+			catch (FormatException e)
+			{
+				Console.WriteLine("FormatException thrown while parsing trip stop time '" + timeStr + "' " + e.ToString());
+			}
+		}
+
+		private string normalizeTimeTo24Hr(string timeStr)
+		{
+			string originalTime = timeStr;
+
+			timeStr = Regex.Replace(timeStr, @"(24)(:\d{2}:\d{2})", "00$2");
+			timeStr = Regex.Replace(timeStr, @"(25)(:\d{2}:\d{2})", "01$2");
+			timeStr = Regex.Replace(timeStr, @"(26)(:\d{2}:\d{2})", "02$2");
+			timeStr = Regex.Replace(timeStr, @"(27)(:\d{2}:\d{2})", "03$2");
+			timeStr = Regex.Replace(timeStr, @"(28)(:\d{2}:\d{2})", "04$2");
+
+			normalized = timeStr.Equals(originalTime);
+
+			return timeStr;
+		}
+	}
+
     class Trip
     {
+		public struct trip_stop_time
+		{
+			public long time;
+			public bool is24hrScale;
+		}
+
         public struct trip_stops_t
         {
             public string stop_seq;
             public string stop_id;
-            public long arrive_time;
-            public long dept_time;
+			public TripStopTime arrival;
+			public TripStopTime departure;
         }
 
         public struct trip_t
@@ -36,24 +93,6 @@ namespace rtd
             // constructor
             initializeTrips();
         }
-
-		static string normalizeTimeTo24HrAnd(string time)
-		{
-			time = Regex.Replace(time, @"(24)(:\d{2}:\d{2})", "00$2");
-			time = Regex.Replace(time, @"(25)(:\d{2}:\d{2})", "01$2");
-			time = Regex.Replace(time, @"(26)(:\d{2}:\d{2})", "02$2");
-			return time;
-		}
-
-		static long convertTimeToUnix(string timeStr)
-		{
-			long time = 0;
-			timeStr = normalizeTimeTo24HrAnd(timeStr);
-
-			// TODO: parse hh:mm:ss and convert to unix
-
-			return time;
-		}
 
         static void initializeTrips()
         {
@@ -86,8 +125,8 @@ namespace rtd
                     {
                         stop_id = row[TRIP_STOP_STOP_ID],
                         stop_seq = row[TRIP_STOP_STOP_SEQ],
-						arrive_time = convertTimeToUnix(row[TRIP_STOP_ARRIVE_TIME]),
-						dept_time = convertTimeToUnix(row[TRIP_STOP_DEPT_TIME])
+						arrival = new TripStopTime(row[TRIP_STOP_ARRIVE_TIME]),
+						departure = new TripStopTime(row[TRIP_STOP_DEPT_TIME])
                     });
                     thisTrip.tripStops = stops;
                     trips.Add(tripID, thisTrip); // add this trip to the trips dictionary
@@ -98,8 +137,8 @@ namespace rtd
                     {
                         stop_id = row[TRIP_STOP_STOP_ID],
                         stop_seq = row[TRIP_STOP_STOP_SEQ],
-                        arrive_time = convertTimeToUnix(row[TRIP_STOP_ARRIVE_TIME]),
-						dept_time = convertTimeToUnix(row[TRIP_STOP_DEPT_TIME])
+                        arrival = new TripStopTime(row[TRIP_STOP_ARRIVE_TIME]),
+						departure = new TripStopTime(row[TRIP_STOP_DEPT_TIME])
                     });
 
                 }
