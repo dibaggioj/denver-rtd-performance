@@ -153,6 +153,7 @@ namespace rtd
 
 			Stop stop_inst = new Stop();	// initialize static stop dictionary from RTD data file
 			Trip trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
+			Route route_inst = new Route(); // initialize static route dictionary from RTD data file
 
 			foreach (FeedEntity entity in feed.entity)
 			{
@@ -200,6 +201,11 @@ namespace rtd
 												long delta_time = static_next_trip_stop.arrive_time - current_next_stop_arrival_time;
 												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrive_time);
 												Console.WriteLine("difference: " + delta_time);
+
+												// TODO:
+												// add trip to corresponding route instance
+												// add delta time
+
 											}
 										}
 									}
