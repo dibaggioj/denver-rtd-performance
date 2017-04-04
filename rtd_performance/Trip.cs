@@ -68,8 +68,8 @@ namespace rtd
         {
             public string stop_seq;
             public string stop_id;
-			public TripStopTime arrival;
-			public TripStopTime departure;
+			public long arrive_time;
+			public long depart_time;
         }
 
         public struct trip_t
@@ -102,46 +102,57 @@ namespace rtd
 
             trip_t thisTrip;
             List<trip_stops_t> stops;
+			bool readTitles = false;
 
             while ((line = file.ReadLine()) != null)
             {
-                row = line.Split(',');
+				if (!readTitles)
+				{
+					readTitles = true;
+				}
+				else
+				{
+					row = line.Split(',');
 
-                // There are 2 cases to consider
-                //      1) this is the first time we have seen this trip ID
-                //      2) we are build a list of stops for this trip
+					// There are 2 cases to consider
+					//      1) this is the first time we have seen this trip ID
+					//      2) we are build a list of stops for this trip
 
-                // If this is the first time we have seen this trip ID, start a new dictionary entry
-                // otherwise keep going with the current trip
+					// If this is the first time we have seen this trip ID, start a new dictionary entry
+					// otherwise keep going with the current trip
 
-                string tripID = row[TRIP_TRIP_ID];
+					string tripID = row[TRIP_TRIP_ID];
 
-                if (!trips.ContainsKey(tripID)) // we have never seen this trip ID; start a new trip
-                {
-                    thisTrip = new trip_t { };
-                    thisTrip.trip_id = tripID;
-                    stops = new List<trip_stops_t>();
-                    stops.Add(new trip_stops_t
-                    {
-                        stop_id = row[TRIP_STOP_STOP_ID],
-                        stop_seq = row[TRIP_STOP_STOP_SEQ],
-						arrival = new TripStopTime(row[TRIP_STOP_ARRIVE_TIME]),
-						departure = new TripStopTime(row[TRIP_STOP_DEPT_TIME])
-                    });
-                    thisTrip.tripStops = stops;
-                    trips.Add(tripID, thisTrip); // add this trip to the trips dictionary
-                }
-                else // we have seen this trip ID; append this stop to the stops list
-                {
-                    trips[tripID].tripStops.Add(new trip_stops_t
-                    {
-                        stop_id = row[TRIP_STOP_STOP_ID],
-                        stop_seq = row[TRIP_STOP_STOP_SEQ],
-                        arrival = new TripStopTime(row[TRIP_STOP_ARRIVE_TIME]),
-						departure = new TripStopTime(row[TRIP_STOP_DEPT_TIME])
-                    });
+					TripStopTime arrival = new TripStopTime(row[TRIP_STOP_ARRIVE_TIME]);
+					TripStopTime departure = new TripStopTime(row[TRIP_STOP_DEPT_TIME]);
 
-                }
+					if (!trips.ContainsKey(tripID)) // we have never seen this trip ID; start a new trip
+					{
+						thisTrip = new trip_t { };
+						thisTrip.trip_id = tripID;
+						stops = new List<trip_stops_t>();
+						stops.Add(new trip_stops_t
+						{
+							stop_id = row[TRIP_STOP_STOP_ID],
+							stop_seq = row[TRIP_STOP_STOP_SEQ],
+							arrive_time = arrival.time,
+							depart_time = departure.time
+						});  
+						thisTrip.tripStops = stops;
+						trips.Add(tripID, thisTrip); // add this trip to the trips dictionary
+					}
+					else // we have seen this trip ID; append this stop to the stops list
+					{
+						trips[tripID].tripStops.Add(new trip_stops_t
+						{
+							stop_id = row[TRIP_STOP_STOP_ID],
+							stop_seq = row[TRIP_STOP_STOP_SEQ],
+							arrive_time = arrival.time,
+							depart_time = departure.time
+						});
+
+					}
+				}
 
             }
             file.Close();

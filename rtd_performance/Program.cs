@@ -195,10 +195,10 @@ namespace rtd
 										if (stop_seq >= 1 && static_trip.tripStops.Count >= stop_seq)
 										{
 											static_next_trip_stop = static_trip.tripStops[stop_seq - 1];    // sequence numbers are 1-indexed
-											if (static_next_trip_stop.arrival.time > 0)
+											if (static_next_trip_stop.arrive_time > 0)
 											{
-												long delta_time = static_next_trip_stop.arrival.time - current_next_stop_arrival_time;
-												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrival.time);
+												long delta_time = static_next_trip_stop.arrive_time - current_next_stop_arrival_time;
+												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrive_time);
 												Console.WriteLine("difference: " + delta_time);
 											}
 										}
@@ -282,7 +282,7 @@ namespace rtd
 										{
 											if (stop.stop_id == entity.vehicle.stop_id)
 											{
-												Console.WriteLine(".. and is scheduled to arrive there at " + stop.arrival.time);
+												Console.WriteLine(".. and is scheduled to arrive there at " + stop.arrive_time);
 											}
 										}
 									}
