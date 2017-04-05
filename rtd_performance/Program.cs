@@ -126,11 +126,10 @@ namespace rtd
 		static void InitRTDServiceCredentials()
 		{
 			StreamReader file = new StreamReader(rtd_service_filename);
-			string line;
-			string[] row = new string[2];
-			while ((line = file.ReadLine()) != null)
+			string line = file.ReadLine();
+			if (line != null)
 			{
-				row = line.Split(',');
+				string[] row = line.Split(',');
 				client_id = row[0];
 				client_secret = row[1];
 			}
@@ -169,12 +168,7 @@ namespace rtd
 					continue;
 				}
 
-				string trip_id = null;
-				if (trip_update.trip != null)
-				{
-					trip_id = trip_update.trip.trip_id;
-				}
-
+				string trip_id = trip_update.trip != null ? trip_update.trip.trip_id : null;
 				if (trip_id == null 
 				    || trip_update.stop_time_update == null 
 				    || trip_update.stop_time_update.Count < 1 
