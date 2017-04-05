@@ -163,141 +163,144 @@ namespace rtd
 
 			foreach (FeedEntity entity in feed.entity)
 			{
-				TripUpdate trip_update;
-
-				trip_update = entity.trip_update;
-				if (trip_update != null)
+				TripUpdate trip_update = entity.trip_update;
+				if (trip_update == null)
 				{
-					string trip_id = null;
-					if (trip_update.trip != null)
-					{
-						trip_id = trip_update.trip.trip_id;
-					}
-
-					if (trip_id == null)
-					{
-						break;
-					}
-
-					if (trip_update.stop_time_update != null && trip_update.stop_time_update.Count > 0)
-					{
-						Trip.trip_t static_trip;
-						Trip.trip_stops_t static_next_trip_stop;
-
-						if (trip_id != null && Trip.trips.ContainsKey(trip_id))
-						{
-							static_trip = Trip.trips[trip_id];
-							if (trip_update.stop_time_update.Count > 0)
-							{
-								TripUpdate.StopTimeUpdate current_next_stop_time_update = trip_update.stop_time_update[0];
-								if (current_next_stop_time_update != null)
-								{
-									uint current_first_stop_seq = current_next_stop_time_update.stop_sequence;
-									TripUpdate.StopTimeEvent current_first_stop_arrival = current_next_stop_time_update.arrival;
-									if (current_first_stop_arrival != null)
-									{
-										long current_next_stop_arrival_time = current_first_stop_arrival.time;
-
-										int stop_seq = Convert.ToInt32(current_first_stop_seq);
-										if (stop_seq >= 1 && static_trip.tripStops.Count >= stop_seq)
-										{
-											static_next_trip_stop = static_trip.tripStops[stop_seq - 1];    // sequence numbers are 1-indexed
-											if (static_next_trip_stop.arrive_time > 0)
-											{
-												long delta_time = static_next_trip_stop.arrive_time - current_next_stop_arrival_time;
-												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrive_time);
-												Console.WriteLine("difference: " + delta_time);
-
-												RouteInstance route = Route.getRouteById(trip_update.trip.route_id);
-
-												route.addTrip(trip_id);
-												route.addTime(delta_time);
-
-												Console.WriteLine(route.routeId + ", " + route.getAverageTime() + ", " + route.getTotalTrips());
-											}
-										}
-									}
-								}
-							}
-						}
-					}
+					continue;
 				}
+
+				string trip_id = null;
+				if (trip_update.trip != null)
+				{
+					trip_id = trip_update.trip.trip_id;
+				}
+
+				if (trip_id == null 
+				    || trip_update.stop_time_update == null 
+				    || trip_update.stop_time_update.Count < 1 
+				    || !Trip.trips.ContainsKey(trip_id))
+				{
+					continue;
+				}
+
+				TripUpdate.StopTimeUpdate current_next_stop_time_update = trip_update.stop_time_update[0];
+				if (current_next_stop_time_update == null)
+				{
+					continue;
+				}
+
+				uint current_first_stop_seq = current_next_stop_time_update.stop_sequence;
+				TripUpdate.StopTimeEvent current_first_stop_arrival = current_next_stop_time_update.arrival;
+				if (current_first_stop_arrival == null)
+				{
+					continue;
+				}
+
+				long current_next_stop_arrival_time = current_first_stop_arrival.time;
+				int stop_seq = Convert.ToInt32(current_first_stop_seq);
+				Trip.trip_t static_trip = Trip.trips[trip_id];
+				if (stop_seq < 1 || static_trip.tripStops.Count < stop_seq)
+				{
+					continue;
+				}
+
+				Trip.trip_stops_t static_next_trip_stop = static_trip.tripStops[stop_seq - 1];    // sequence numbers are 1-indexed
+				if (static_next_trip_stop.arrive_time <= 0)
+				{
+					continue;
+				}
+
+				long delta_time = static_next_trip_stop.arrive_time - current_next_stop_arrival_time;
+
+				Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrive_time);
+				Console.WriteLine("difference: " + delta_time);
+
+				RouteInstance route = Route.getRouteById(trip_update.trip.route_id);
+				if (route == null)
+				{
+					continue;
+				}
+
+				route.addTrip(trip_id);
+				route.addTime(delta_time);
+
+				Console.WriteLine(route.routeId + ", " + route.getAverageTime() + ", " + route.getTotalTrips());
 			}
 		}
 
-		static void GetAndProcessVehiclePosition()
-		{
-            Uri myUri = new Uri("http://www.rtd-denver.com/google_sync/VehiclePosition.pb");
-			WebRequest myWebRequest = HttpWebRequest.Create(myUri);
+		//static void GetAndProcessVehiclePosition()
+		//{
+		//	myUri = new Uri("http://www.rtd-denver.com/google_sync/VehiclePosition.pb");
+		//	WebRequest myWebRequest = HttpWebRequest.Create(myUri);
 
-			HttpWebRequest myHttpWebRequest = (HttpWebRequest)myWebRequest;
+		//	HttpWebRequest myHttpWebRequest = (HttpWebRequest)myWebRequest;
 
-			NetworkCredential myNetworkCredential = new NetworkCredential(client_id, client_secret);
+		//	NetworkCredential myNetworkCredential = new NetworkCredential(client_id, client_secret);
 
-			CredentialCache myCredentialCache = new CredentialCache();
-			myCredentialCache.Add(myUri, "Basic", myNetworkCredential);
+		//	CredentialCache myCredentialCache = new CredentialCache();
+		//	myCredentialCache.Add(myUri, "Basic", myNetworkCredential);
 
-			myHttpWebRequest.PreAuthenticate = true;
-			myHttpWebRequest.Credentials = myCredentialCache;
+		//	myHttpWebRequest.PreAuthenticate = true;
+		//	myHttpWebRequest.Credentials = myCredentialCache;
 
-			FeedMessage feed = Serializer.Deserialize<FeedMessage>(myWebRequest.GetResponse().GetResponseStream());
+		//	FeedMessage feed = Serializer.Deserialize<FeedMessage>(myWebRequest.GetResponse().GetResponseStream());
 
-			foreach (FeedEntity entity in feed.entity)
-			{
-				if (entity.vehicle != null)
-				{
-					if (entity.vehicle.trip != null)
-					{
-						if (entity.vehicle.trip.route_id != null)
-						{
-							Console.WriteLine("Route ID = " + entity.vehicle.trip.route_id);
-							Console.WriteLine("Vehicle ID = " + entity.vehicle.vehicle.id);
-							Console.WriteLine("Current Position Information:");
-							Console.WriteLine("Current Latitude = " + entity.vehicle.position.latitude);
-							Console.WriteLine("Current Longitude = " + entity.vehicle.position.longitude);
-							Console.WriteLine("Current Bearing = " + entity.vehicle.position.bearing);
-							Console.WriteLine("Current Status = " + entity.vehicle.current_status + " StopID: " + entity.vehicle.stop_id);
-							if (Stop.stops.ContainsKey(entity.vehicle.stop_id))
-							{
-								Console.WriteLine("The name of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_name + "\"");
-								Console.WriteLine("The Latitude of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_lat + "\"");
-								Console.WriteLine("The Longitude of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_long + "\"");
-								string wheelChairOK = "IS NOT";
-								if (Stop.stops[entity.vehicle.stop_id].wheelchair_access)
-								{
-									wheelChairOK = "IS";
-								}
-								Console.WriteLine("This stop is " + wheelChairOK + " wheelchair accessible");
-							}
+		//	foreach (FeedEntity entity in feed.entity)
+		//	{
+		//		if (entity.vehicle != null)
+		//		{
+		//			if (entity.vehicle.trip != null)
+		//			{
+		//				if (entity.vehicle.trip.route_id != null)
+		//				{
+		//					Console.WriteLine("Route ID = " + entity.vehicle.trip.route_id);
+		//					Console.WriteLine("Vehicle ID = " + entity.vehicle.vehicle.id);
+		//					Console.WriteLine("Current Position Information:");
+		//					Console.WriteLine("Current Latitude = " + entity.vehicle.position.latitude);
+		//					Console.WriteLine("Current Longitude = " + entity.vehicle.position.longitude);
+		//					Console.WriteLine("Current Bearing = " + entity.vehicle.position.bearing);
+		//					Console.WriteLine("Current Status = " + entity.vehicle.current_status + " StopID: " + entity.vehicle.stop_id);
+		//					if (Stop.stops.ContainsKey(entity.vehicle.stop_id))
+		//					{
+		//						Console.WriteLine("The name of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_name + "\"");
+		//						Console.WriteLine("The Latitude of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_lat + "\"");
+		//						Console.WriteLine("The Longitude of this StopID is \"" + Stop.stops[entity.vehicle.stop_id].stop_long + "\"");
+		//						string wheelChairOK = "IS NOT";
+		//						if (Stop.stops[entity.vehicle.stop_id].wheelchair_access)
+		//						{
+		//							wheelChairOK = "IS";
+		//						}
+		//						Console.WriteLine("This stop is " + wheelChairOK + " wheelchair accessible");
+		//					}
 
-							Console.WriteLine("Trip ID = " + entity.vehicle.trip.trip_id);
-							if (Trip.trips.ContainsKey(entity.vehicle.trip.trip_id))
-							{
-								if (entity.vehicle.current_status.ToString() == "IN_TRANSIT_TO")
-								{
-									if (Stop.stops.ContainsKey(entity.vehicle.stop_id))
-									{
-										Console.WriteLine("Vehicle in transit to: " + Stop.stops[entity.vehicle.stop_id].stop_name);
-										Trip.trip_t trip = Trip.trips[entity.vehicle.trip.trip_id];
-										foreach (Trip.trip_stops_t stop in trip.tripStops)
-										{
-											if (stop.stop_id == entity.vehicle.stop_id)
-											{
-												Console.WriteLine(".. and is scheduled to arrive there at " + stop.arrive_time);
-											}
-										}
-									}
-								}
-								Console.WriteLine();
-							}
-						}
-					}
-				}
-			}
+		//					Console.WriteLine("Trip ID = " + entity.vehicle.trip.trip_id);
+		//					if (Trip.trips.ContainsKey(entity.vehicle.trip.trip_id))
+		//					{
+		//						if (entity.vehicle.current_status.ToString() == "IN_TRANSIT_TO")
+		//						{
+		//							if (Stop.stops.ContainsKey(entity.vehicle.stop_id))
+		//							{
+		//								Console.WriteLine("Vehicle in transit to: " + Stop.stops[entity.vehicle.stop_id].stop_name);
+		//								Trip.trip_t trip = Trip.trips[entity.vehicle.trip.trip_id];
+		//								foreach (Trip.trip_stops_t stop in trip.tripStops)
+		//								{
+		//									if (stop.stop_id == entity.vehicle.stop_id)
+		//									{
+		//										Console.WriteLine(".. and is scheduled to arrive there at " + stop.arrive_time);
+		//									}
+		//								}
+		//							}
+		//						}
+		//						Console.WriteLine();
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}
 
-			Console.WriteLine("Press any key to continue");
-			Console.ReadLine();
-		}
+		//	Console.WriteLine("Press any key to continue");
+		//	Console.ReadLine();
+		//}
 
 		static void Main(string[] args)
 		{

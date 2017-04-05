@@ -111,11 +111,20 @@ namespace rtd
 			}
 		}
 
+		/**
+		 * Returns the total number of different trips (i.e., different buses) along the route within the period 
+		 * tracked.
+		 */
 		public long getTotalTrips()
 		{
 			return trips.Count;
 		}
 
+		/**
+		 * Returns the route's average delta time between scheduled arrival time and current predicted arrival time
+		 * within the period tracked. The value is positive if the bus is early on average and negative if the bus is
+		 * late on average.
+		 */
 		public double getAverageTime()
 		{
 			if (count == 0)
