@@ -223,16 +223,6 @@ namespace rtd
 					}
 				}
 			}
-
-			Console.WriteLine("Press any key to continue");
-			Console.ReadLine();
-
-			/**
-			 * TODO:
-			 * For each route, store each trip and each trip's minutely delta_time values
-			 * For each route, report average hourly on-time-ness value and trip count (i.e., number
-			 * of buses running on that route during that hour)
-			 */
 		}
 
 		static void GetAndProcessVehiclePosition()
@@ -329,6 +319,8 @@ namespace rtd
 			 *     GetAndProcessTripUpdate();
 			 * 
 			 */ 
+
+			Console.WriteLine("Press any key to continue");
 		}   
     }
 }
