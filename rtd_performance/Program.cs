@@ -119,6 +119,9 @@ namespace rtd
 
 		static string client_id = "";
 		static string client_secret = "";
+		static Stop stop_inst;
+		static Trip trip_inst;
+		static Route route_inst;
 
 		static void InitRTDServiceCredentials()
 		{
@@ -132,6 +135,13 @@ namespace rtd
 				client_secret = row[1];
 			}
 			file.Close();
+		}
+
+		static void InitStaticRTDData()
+		{
+			stop_inst = new Stop();    // initialize static stop dictionary from RTD data file
+			trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
+			route_inst = new Route(); // initialize static route dictionary from RTD data file
 		}
 
 		static void GetAndProcessTripUpdate()
@@ -150,10 +160,6 @@ namespace rtd
 			myHttpWebRequest.Credentials = myCredentialCache;
 
 			FeedMessage feed = Serializer.Deserialize<FeedMessage>(myWebRequest.GetResponse().GetResponseStream());
-
-			Stop stop_inst = new Stop();	// initialize static stop dictionary from RTD data file
-			Trip trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
-			Route route_inst = new Route(); // initialize static route dictionary from RTD data file
 
 			foreach (FeedEntity entity in feed.entity)
 			{
@@ -246,9 +252,6 @@ namespace rtd
 
 			FeedMessage feed = Serializer.Deserialize<FeedMessage>(myWebRequest.GetResponse().GetResponseStream());
 
-			Stop stop_inst = new Stop();    // initialize static stop dictionary from RTD data file
-			Trip trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
-
 			foreach (FeedEntity entity in feed.entity)
 			{
 				if (entity.vehicle != null)
@@ -310,12 +313,22 @@ namespace rtd
 		{
 			InitRTDServiceCredentials();
 
-			//GetAndProcessVehiclePosition();
+			InitStaticRTDData();
 
-			// TODO:
-			// add outer 1-hr loop for output and restart
-			// add inner 1-minute loop inside of the outer loop to the update data
 			GetAndProcessTripUpdate();
+
+			/**
+			 * TODO:
+			 * 
+			 * Add outer 1-hr loop for output and restart - call these at end:
+			 *     Route.outputResults();
+			 *     Route.reset();
+			 * 
+			 * Add inner 1-minute loop inside of the outer loop to the update data - should just need to call this 
+			 * each time:
+			 *     GetAndProcessTripUpdate();
+			 * 
+			 */ 
 		}   
     }
 }
