@@ -26,7 +26,7 @@ namespace rtd
 			initializeRouteInstances();
 		}
 
-		static void outputResults()
+		public static void outputResults()
 		{
 
 			// TODO: output average delta time and output trip count (sorted from latest average to earliest average maybe)
@@ -36,12 +36,12 @@ namespace rtd
 			}
 		}
 
-		static void reset()
+		public static void reset()
 		{
 			initializeRouteInstances();
 		}
 
-		static void initializeRouteInstances()
+		private static void initializeRouteInstances()
 		{
 			route_instances = new List<RouteInstance>();
 
@@ -51,7 +51,7 @@ namespace rtd
 			}
 		}
 
-		static void initializeRoutes()
+		private static void initializeRoutes()
 		{
 			StreamReader file = new StreamReader(routesFileName);
 			string line;
