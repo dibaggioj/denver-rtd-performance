@@ -202,10 +202,12 @@ namespace rtd
 												Console.WriteLine("predicted arrival time: " + current_next_stop_arrival_time + " vs scheduled arrival time: " + static_next_trip_stop.arrive_time);
 												Console.WriteLine("difference: " + delta_time);
 
-												// TODO:
-												// add trip to corresponding route instance
-												// add delta time
+												RouteInstance route = Route.getRouteById(trip_update.trip.route_id);
 
+												route.addTrip(trip_id);
+												route.addTime(delta_time);
+
+												Console.WriteLine(route.routeId + ", " + route.getAverageTime() + ", " + route.getTotalTrips());
 											}
 										}
 									}
@@ -309,6 +311,10 @@ namespace rtd
 			InitRTDServiceCredentials();
 
 			//GetAndProcessVehiclePosition();
+
+			// TODO:
+			// add outer 1-hr loop for output and restart
+			// add inner 1-minute loop inside of the outer loop to the update data
 			GetAndProcessTripUpdate();
 		}   
     }

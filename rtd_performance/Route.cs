@@ -18,7 +18,7 @@ namespace rtd
 		const string routesFileName = "routes.txt";
 
 		public static Dictionary<string, route_t> routes = new Dictionary<string, route_t>() { };
-		static public List<RouteInstance> routes_instances;
+		static public List<RouteInstance> route_instances;
 
 		public Route()
 		{
@@ -30,7 +30,7 @@ namespace rtd
 		{
 
 			// TODO: output average delta time and output trip count (sorted from latest average to earliest average maybe)
-			foreach (RouteInstance route_istance in routes_instances)
+			foreach (RouteInstance route_istance in route_instances)
 			{
 				Console.WriteLine("Average time: " + route_istance.getAverageTime() + ", buses: " + route_istance.getTotalTrips());
 			}
@@ -43,11 +43,11 @@ namespace rtd
 
 		static void initializeRouteInstances()
 		{
-			routes_instances = new List<RouteInstance>();
+			route_instances = new List<RouteInstance>();
 
 			foreach (string route_id in routes.Keys)
 			{
-				routes_instances.Add(new RouteInstance(route_id));
+				route_instances.Add(new RouteInstance(route_id));
 			}
 		}
 
@@ -68,17 +68,28 @@ namespace rtd
 			}
 			file.Close();
 		}
+
+		public static RouteInstance getRouteById(string route_id)
+		{
+			foreach (RouteInstance route_instance in route_instances)
+			{
+				if (route_instance.routeId.Equals(route_id))
+				{
+					return route_instance;
+				}
+			}
+
+			return null;
+		}
 	}
 
 	public class RouteInstance
 	{
 		public string routeId;
-		public double totalDeltaTime = 0;
-		public long count = 0;
-		public long totalTrips = 0;
-		public List<string> trips;
 
-		// TODO: handle trip count
+		private double totalDeltaTime = 0;
+		private long count = 0;
+		private List<string> trips;
 
 		public RouteInstance(string id)
 		{
@@ -116,4 +127,5 @@ namespace rtd
 			return (double) totalDeltaTime / count;
 		}
 	}
+
 }
