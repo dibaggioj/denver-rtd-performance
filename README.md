@@ -12,7 +12,7 @@ Project modified from JKB test-transit
 
 ### About
 
-Outputs an hourly report based on data of each  route on a minute basis: its average timeliness (how many seconds late or early its buses are on average) and its total number of buses (trips) over the hour duration. The results are ordered from latest to earliest. The It does not output any results for a  route when there are no trips along that  route during the hour duration. For example:  
+Outputs an hourly report based on data of each  route on a minute basis: its average timeliness (how many seconds late or early its buses are on average) and its total number of buses (trips) over the hour duration. The results are ordered from latest to earliest. It does not output any results for a route when there are no trips along that route during the hour duration. For example:  
 
 ###################################################################################  
 Outputting hourly route bus timeliness for 2017/04/05 from 22:09:04 to 23:09:04  
