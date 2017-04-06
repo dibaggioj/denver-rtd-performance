@@ -29,10 +29,12 @@ namespace rtd
 		public static void outputResults()
 		{
 			Console.WriteLine("###################################################################################");
-			Console.WriteLine(string.Format("Outputting hourly route bus timeliness for {0} from {1} to {2}",
+			Console.WriteLine(string.Format("Outputting hourly route bus timeliness for {0} from {1} to {2}\n",
 			                                DateTime.Now.ToString("yyyy/MM/dd"),
 			                                DateTime.Now.AddHours(-1).ToString("HH:mm:ss"),
 			                                DateTime.Now.ToString("HH:mm:ss")));
+
+			route_instances.Sort();
 
 			foreach (RouteInstance route_instance in route_instances)
 			{
@@ -95,7 +97,7 @@ namespace rtd
 		}
 	}
 
-	public class RouteInstance
+	public class RouteInstance : IComparable<RouteInstance>
 	{
 		public string routeId;
 
@@ -145,6 +147,11 @@ namespace rtd
 			}
 
 			return (double) totalDeltaTime / count;
+		}
+
+		public int CompareTo(RouteInstance other)
+		{
+			return getAverageTime().CompareTo(other.getAverageTime());
 		}
 	}
 
