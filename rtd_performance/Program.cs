@@ -52,7 +52,7 @@ namespace rtd
 			Console.Write("Getting RTD static data...");
 			stop_inst = new Stop();    // initialize static stop dictionary from RTD data file
 			trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
-			route_inst = new Route(); // initialize static route dictionary from RTD data file
+			route_inst = new Route();  // initialize static route dictionary from RTD data file
 			Console.WriteLine("Done!\nInitialzing program.\n");
 		}
 
@@ -77,6 +77,10 @@ namespace rtd
 			Console.ReadLine();
 		}
 
+		/**
+-		 * Get minutely updated data from service
+-		 * Process data and store for output at the end of the hour
+-		 */
 		static void updateData()
 		{
 			Uri myUri = new Uri("http://www.rtd-denver.com/google_sync/TripUpdate.pb");
@@ -156,6 +160,9 @@ namespace rtd
 			updateData();
 		}
 
+		/**
+-		 * Output data collected over past hour and restart recording
+-		 */
 		private static void UpdateTimer_Tick(object sender, EventArgs e)
 		{
 			Route.outputResults();
