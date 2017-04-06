@@ -28,12 +28,20 @@ namespace rtd
 
 		public static void outputResults()
 		{
+			Console.WriteLine("###################################################################################");
+			Console.WriteLine(string.Format("Outputting hourly results for date: {0} from hour {1} to {2}",
+			                                DateTime.Now.ToString("yyyy/MM/dd"),
+			                                DateTime.Now.AddHours(-1).ToString("HH:mm:ss"),
+			                                DateTime.Now.ToString("HH:mm:ss")));
 
-			// TODO: output average delta time and output trip count (sorted from latest average to earliest average maybe)
-			foreach (RouteInstance route_istance in route_instances)
+			foreach (RouteInstance route_instance in route_instances)
 			{
-				Console.WriteLine("Average time: " + route_istance.getAverageTime() + ", buses: " + route_istance.getTotalTrips());
+				if (route_instance.getTotalTrips() > 0)
+				{
+					Console.WriteLine("Route ID: " + route_instance.routeId + ", average time: " + Math.Round(route_instance.getAverageTime(), 2) + ", buses: " + route_instance.getTotalTrips());
+				}
 			}
+			Console.WriteLine("###################################################################################");
 		}
 
 		public static void reset()
@@ -129,7 +137,6 @@ namespace rtd
 		{
 			if (count == 0)
 			{
-				//throw new Exception("No times recorded");
 				return 0;
 			}
 
