@@ -32,7 +32,7 @@ namespace rtd
 		static Stop stop_inst;
 		static Trip trip_inst;
 		static Route route_inst;
-		static Timer hourTimer;
+		static Timer updateTimer;
 
 		static void InitRTDServiceCredentials()
 		{
@@ -49,16 +49,35 @@ namespace rtd
 
 		static void InitStaticRTDData()
 		{
+			Console.Write("Getting RTD static data...");
 			stop_inst = new Stop();    // initialize static stop dictionary from RTD data file
 			trip_inst = new Trip();    // initialize static trip dictionary from RTD data file
-			route_inst = new Route();  // initialize static route dictionary from RTD data file
+			route_inst = new Route(); // initialize static route dictionary from RTD data file
+			Console.WriteLine("Done!\nInitialzing program.\n");
 		}
 
-		/**
-		 * Get minutely updated data from service
-		 * Process data and store for output at the end of the hour
-		 */
-		static void MinTimer_Tick(object sender, EventArgs e)
+		static void initTimer()
+		{
+			updateTimer = new Timer();
+			updateTimer.Elapsed += UpdateTimer_Tick;
+			updateTimer.Interval = 60 * 60 * 1000;
+			updateTimer.Start();
+		}
+
+		static void displayGreeting()
+		{
+			Console.WriteLine("Authors: John DiBaggio, Kyle Etsler, Nanu Ahluwalia\n"
+								+ "IoT Lab 6 - Spring 2017\n\n");
+		}
+
+		static void displayExit()
+		{
+			Console.WriteLine("This program will continue to run until you exit. Press enter to close the program.\n"
+								+ "This program will update every 1 hour with data...");
+			Console.ReadLine();
+		}
+
+		static void updateData()
 		{
 			Uri myUri = new Uri("http://www.rtd-denver.com/google_sync/TripUpdate.pb");
 			WebRequest myWebRequest = HttpWebRequest.Create(myUri);
@@ -132,34 +151,31 @@ namespace rtd
 			}
 		}
 
-		/**
-		 * Output data collected over past hour and restart recording
-		 */
-		private static void HourTimer_Tick(object sender, EventArgs e)
+		static void GetAndProcessTripUpdate(object sender, EventArgs e)
+		{
+			updateData();
+		}
+
+		private static void UpdateTimer_Tick(object sender, EventArgs e)
 		{
 			Route.outputResults();
 			Route.reset();
-
 			Timer minTimer;
 			minTimer = new Timer();
-			minTimer.Elapsed += MinTimer_Tick;
+			minTimer.Elapsed += GetAndProcessTripUpdate;
 			minTimer.Interval = 60 * 1000;
 			minTimer.Start();
 		}
 
+
 		static void Main(string[] args)
 		{
+			displayGreeting();
 			InitRTDServiceCredentials();
-
 			InitStaticRTDData();
-
-			hourTimer = new Timer();
-			hourTimer.Elapsed += HourTimer_Tick;
-			hourTimer.Interval = 60 * 60 * 1000;
-			hourTimer.Start();
-
-			Console.WriteLine("Press enter key to exit");
-			Console.ReadLine();	// Keep program from exiting
+			updateData();
+			initTimer();
+			displayExit();
 		}
 	}
 }
