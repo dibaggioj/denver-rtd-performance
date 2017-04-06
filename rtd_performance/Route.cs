@@ -29,7 +29,7 @@ namespace rtd
 		public static void outputResults()
 		{
 			Console.WriteLine("###################################################################################");
-			Console.WriteLine(string.Format("Outputting hourly results for date: {0} from hour {1} to {2}",
+			Console.WriteLine(string.Format("Outputting hourly route bus timeliness for {0} from {1} to {2}",
 			                                DateTime.Now.ToString("yyyy/MM/dd"),
 			                                DateTime.Now.AddHours(-1).ToString("HH:mm:ss"),
 			                                DateTime.Now.ToString("HH:mm:ss")));
@@ -38,10 +38,14 @@ namespace rtd
 			{
 				if (route_instance.getTotalTrips() > 0)
 				{
-					Console.WriteLine("Route ID: " + route_instance.routeId + ", average time: " + Math.Round(route_instance.getAverageTime(), 2) + ", buses: " + route_instance.getTotalTrips());
+					Console.WriteLine(string.Format("Route: {0}, average time: {1} seconds, buses: {2}, average status: {3}",
+					                                route_instance.routeId,
+									  				Math.Round(route_instance.getAverageTime(), 2),
+													route_instance.getTotalTrips(),
+					                                route_instance.getAverageTime() < 0 ? "LATE" : "EARLY"));
 				}
 			}
-			Console.WriteLine("###################################################################################");
+			Console.WriteLine("###################################################################################\n");
 		}
 
 		public static void reset()
